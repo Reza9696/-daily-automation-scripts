@@ -1,0 +1,41 @@
+name: Daily Python Snippet
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate-snippet:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Generate Snippet
+        run: python scripts/generate_snippet.py
+      
+      - name: Configure Git
+        run: |
+          git config user.name "Reza"
+          git config user.email "reza9696@users.noreply.github.com"
+      
+      - name: Commit and Push
+        run: |
+          git add snippets/
+          if git diff --staged --quiet; then
+            echo "No changes"
+          else
+            SNIPPET_FILE=$(git diff --staged --name-only | head -1)
+            git commit -m "Daily Snippet: $(basename $SNIPPET_FILE .py)"
+            git push
+          fi
